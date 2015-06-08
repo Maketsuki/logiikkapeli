@@ -1,0 +1,145 @@
+html>
+	<head>
+		<title>
+			Logiikkapeli
+		</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script src="reika.js"></script>
+		<script src="pelinappula.js"></script>
+		<script src="pelilauta.js"></script>
+		
+		
+		<script>
+			var isValittu = false;
+			
+			var valittuNappula = null, valittuRuutu = null;
+			var lauta = PeliLauta;
+			$(document).ready(function(){
+				//alustus
+				
+				lauta.init();
+				//piirretään lauta reikätaulukon perusteella
+				//x-suuntainenrivi käydään joka kierroksella läpi
+				$(lauta.reiat).each(function(index, val){
+					$('#lauta').append('<tr id="'+index+'">');
+				
+					$(lauta.reiat[index]).each(function(index2, val2){
+						if(lauta.reiat[index][index2].kaytossa == 0){
+							$('#'+index).append('<td class="eiKaytossa" data-x="' +index2+'"data-y="'+index+ '"> </td>');
+						}
+						//tarkistetaan ettei ole keskikohta
+						if(lauta.reiat[index][index2].kaytossa == 1){
+							if(!(index == lauta.keski && index2 == lauta.keski)){
+							//&#9733;
+								$('#'+index).append('<td class="taynna" data-x="' +index2+'"data-y="'+index+ '"></td>');
+							}
+							else{
+								$('#'+index).append('<td class="tyhja" data-x="' +index2+'"data-y="'+index+ '"> </td>');
+							}
+						}
+					});
+					
+					$('#lauta').append('</tr>');
+				});
+			});
+		</script>
+		<style>
+			.eiKaytossa{
+				background-color: white;
+			}
+			
+			.taynna, .tyhja{
+				background-color: yellow;
+			}
+			
+			.taynna:after, .valittu:after{
+				content: "\2605";
+			}
+			.valittu{
+				background-color: blue;
+			}
+			
+			td{
+				height: 40px;
+				width: 40px;
+				border: 1px solid black;
+				text-align: center;
+				vertical-align: middle;
+			}
+			
+		</style>
+	</head>
+	<body>
+		<script>
+		$(document).ready(function(){
+		//kun ruutua klikataan, ja ruudussa on nappula, niin valitaan se ruutu
+		//muut valitut ruudut poistetaan
+			$('td').click(function(){
+				if($(this).hasClass('taynna')){
+					isValittu = true;
+					$('.valittu').removeClass('valittu').addClass('taynna');
+					$(this).removeClass('taynna').addClass('valittu');
+				}
+				//Jos valitaan tyhjä ruutu, ja joku täysi ruutu on valittu, niin lasketaan
+				//voiko nappula hypätä siihen
+				else if($(this).hasClass('tyhja') && isValittu){
+					nappulaX = $('.valittu').data('x');
+					nappulaY = $('.valittu').data('y');
+					tyhjaX = $(this).data('x');
+					tyhjaY = $(this).data('y');
+					
+					valittuNappula = lauta.reiat[nappulaY][nappulaX];
+					valittuRuutu = $(this);
+					//tarkastetaan etäisyys
+					
+					//eka katotaan, että ovatko samalla sarakkeella
+					if(nappulaX == tyhjaX){
+						//tarkastetaan, että niiden välissä on vain 1 ruutu
+						if(nappulaY - 2 == tyhjaY){
+							x = nappulaX;
+							y = nappulaY - 1;
+							valiruudunTyhjennys(x, y);
+						}
+						
+						else if(nappulaY + 2 == tyhjaY){
+							x = nappulaX;
+							y = nappulaY + 1;
+							valiruudunTyhjennys(x, y);
+						}
+					}
+					
+					//katotaan, ovatko nappulat samalla sarakkeella
+					else if(nappulaY == tyhjaY){
+						if(nappulaX - 2 == tyhjaX){
+							x = nappulaX - 1;
+							y = nappulaY;
+							valiruudunTyhjennys(x, y);
+						}
+						
+						else if(nappulaX + 2 == tyhjaX){
+							x = nappulaX + 1;
+							y = nappulaY;
+							valiruudunTyhjennys(x, y);
+						}
+					}
+				}
+			});
+		});
+		
+		function valiruudunTyhjennys(x, y){
+			valiRuutu = $('[data-x = '+ x +'][data-y = '+ y +']');
+			if($(valiRuutu).hasClass('taynna')){
+				$(valiRuutu).removeClass('taynna').addClass('tyhja');			
+				nappulanSiirto();
+			}
+		}
+		
+		function nappulanSiirto(){
+			$('.valittu').removeClass('valittu').addClass('tyhja');
+			$(valittuRuutu).removeClass('tyhja').addClass('taynna');
+		}
+		</script>
+		<div id="lauta">
+		</table>
+	</body>
+</html>
